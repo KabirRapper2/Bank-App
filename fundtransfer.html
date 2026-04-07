@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="CSS/global.css">
+    <title>Fund Transfer - John F Kennedy Bank</title>
+</head>
+<body>
+<header>
+    <h1>John F Kennedy Bank</h1>
+    <h2>Fund Transfer</h2>
+    <a href="dashboad.html">Back to Dashboard</a>
+</header>
+<section>
+    <h3>Transfer Funds</h3>
+    <form id="transferForm">
+        <label for="amount">Amount:</label>
+        <input type="number" id="amount" step="0.01" required><br><br>
+        <label for="recipient">Recipient Account:</label>
+        <input type="text" id="recipient" required><br><br>
+        <label for="description">Description:</label>
+        <input type="text" id="description"><br><br>
+        <button type="submit">Transfer</button>
+    </form>
+</section>
+<script src="JS/script.js"></script>
+<script>
+document.getElementById('transferForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const amount = parseFloat(document.getElementById('amount').value);
+    const recipient = document.getElementById('recipient').value;
+    const description = document.getElementById('description').value || `Transfer to ${recipient}`;
+    
+    // Load current balance from localStorage
+    const currentBalance = parseFloat(localStorage.getItem('balance')) || 5432.10;
+    
+    if (amount && recipient && amount <= currentBalance && amount > 0) {
+        addTransaction(description, -amount, new Date().toLocaleDateString(), 'Transfer');
+        alert(`Successfully transferred $${amount.toFixed(2)} to ${recipient}`);
+        window.location.href = 'dashboad.html';
+    } else if (amount > currentBalance) {
+        alert('Insufficient funds. Your current balance is $' + currentBalance.toFixed(2));
+    } else {
+        alert('Please enter a valid amount and recipient');
+    }
+});
+</script>
+</body>
+</html>

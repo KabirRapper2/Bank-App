@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<!-- This is the main dashboard HTML file for the John F Kennedy Bank application -->
+<!-- It contains the user interface for the banking dashboard -->
+<!-- Author: AI Assistant -->
+<!-- Date: April 6, 2026 -->
+<!-- Version: 2.0 -->
+<!-- Description: This file provides a comprehensive banking dashboard with account summary, charts, transactions, and more -->
+<html lang="en">
+<!-- Language set to English for accessibility -->
+<head>
+    <!-- Meta tags for proper rendering and SEO -->
+    <meta charset="UTF-8">
+    <!-- Character encoding set to UTF-8 for international characters -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Responsive design meta tag -->
+    <meta name="description" content="John F Kennedy Bank Dashboard - Manage your accounts, view transactions, and more">
+    <!-- SEO description -->
+    <meta name="keywords" content="bank, dashboard, transactions, accounts, finance">
+    <!-- Keywords for search engines -->
+    <meta name="author" content="John F Kennedy Bank">
+    <!-- Author information -->
+    <link rel="stylesheet" href="CSS/global.css">
+    <!-- Link to external CSS file for styling -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js library for data visualization -->
+    <title>Dashboard - John F Kennedy Bank</title>
+    <!-- Page title -->
+</head>
+<body>
+<!-- Main body of the HTML document -->
+<header>
+    <!-- Header section with bank name and user controls -->
+    <h1>John F Kennedy Bank</h1>
+    <!-- Main heading -->
+    <h2>Dashboard</h2>
+    <!-- Subheading -->
+    <div class="user-controls">
+        <button onclick="window.location.href='login.html'">Login</button>
+        <button onclick="window.location.href='signup.html'">Signup</button>
+        <button onclick="logout()">Logout</button>
+    </div>
+</header>
+<section class="account-summary">
+    <h3><i class="fas fa-chart-line"></i> Account Summary</h3>
+    <div class="account-details">
+        <div class="detail">
+            <h4><i class="fas fa-hashtag"></i> Account Number:</h4>
+            <p>1234567890</p>
+        </div>
+        <div class="detail">
+            <h4><i class="fas fa-user"></i> Account Holder:</h4>
+            <p>John Doe</p>
+        </div>
+        <div class="detail">
+            <h4><i class="fas fa-dollar-sign"></i> Balance:</h4>
+            <p>$5,432.10</p>
+        </div>
+        <div class="detail">
+            <h4><i class="fas fa-credit-card"></i> Account Type:</h4>
+            <p>Checking</p>
+        </div>
+    </div>
+</section>
+<section class="budget-goals">
+    <h3><i class="fas fa-bullseye"></i> Budget Goals</h3>
+    <div class="budget-item">
+        <label for="monthly-budget">Monthly Budget:</label>
+        <input type="number" id="monthly-budget" value="5000" min="0">
+        <button onclick="setBudget()">Set Budget</button>
+    </div>
+    <div class="budget-progress">
+        <p>Spent this month: $<span id="monthly-spent">0</span> / $<span id="monthly-budget-display">5000</span></p>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+    </div>
+</section>
+<section class="account-actions">
+    <h3><i class="fas fa-cogs"></i> Account Actions</h3>
+    <button class="action-btn" onclick="window.location.href='login.html'"><i class="fas fa-sign-in-alt"></i> Go to Login</button>
+    <button class="action-btn" onclick="window.location.href='signup.html'"><i class="fas fa-user-plus"></i> Go to Signup</button>
+    <button class="action-btn" onclick="exportTransactions()"><i class="fas fa-download"></i> Export Transactions</button>
+</section>
+<section class="spending-chart">
+    <h3>Spending Overview</h3>
+    <canvas id="spendingChart" width="400" height="200"></canvas>
+</section>
+<section class="recent-transactions">
+    <h3><i class="fas fa-history"></i> Recent Transactions</h3>
+    <input type="text" id="transaction-search" placeholder="Search transactions..." onkeyup="filterTransactions()">
+    <ul id="transaction-list">
+    </ul>
+</section>
+<section class="quick-actions">
+    <!-- Quick actions section -->
+    <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+    <button class="action-btn" onclick="window.location.href='fundtransfer.html'"><i class="fas fa-exchange-alt"></i> Transfer Funds</button>
+    <button class="action-btn" onclick="window.location.href='paybills.html'"><i class="fas fa-file-invoice-dollar"></i> Pay Bills</button>
+    <button class="action-btn" onclick="addBalance()"><i class="fas fa-plus-circle"></i> Add Balance</button>
+    <button class="action-btn" onclick="window.location.href='viewstatements.html'"><i class="fas fa-file-alt"></i> View Statements</button>
+    <button class="action-btn" onclick="Make_a_kid_account()"><i class="fas fa-child"></i> Make a Kid Account</button>
+    <button class="action-btn" onclick="applyForLoan()"><i class="fas fa-hand-holding-usd"></i> Apply for Loan</button>
+    <button class="action-btn" onclick="contactSupport()"><i class="fas fa-headset"></i> Contact Support</button>
+</section>
+<section class="notifications">
+    <h3><i class="fas fa-bell"></i> Notifications</h3>
+    <div class="notification">
+        <p>Your credit card payment is due on April 15, 2026.</p>
+    </div>
+    <div class="notification">
+        <p>New security update available for your account.</p>
+    </div>
+    <div class="notification">
+        <p>Exclusive offer: 5% cashback on online purchases this month!</p>
+    </div>
+</section>
+<section class="advertisement">
+    <h3>Featured Offers</h3>
+</section>
+<script src="JS/script.js"></script>
+</body>
+</html>

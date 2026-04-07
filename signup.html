@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="CSS/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Signup - John F Kennedy Bank</title>
+</head>
+<body>
+<header>
+    <h1><i class="fas fa-university"></i> John F Kennedy Bank</h1>
+    <h2>Signup</h2>
+</header>
+<section>
+    <h3><i class="fas fa-user-plus"></i> Create Your Account</h3>
+    <form id="signupForm">
+        <label for="name"><i class="fas fa-user"></i> Full Name:</label>
+        <input type="text" id="name" required>
+
+        <label for="username"><i class="fas fa-at"></i> Username:</label>
+        <input type="text" id="username" required>
+
+        <label for="email"><i class="fas fa-envelope"></i> Email:</label>
+        <input type="email" id="email" required>
+
+        <label for="password"><i class="fas fa-lock"></i> Password:</label>
+        <input type="password" id="password" required>
+        <div id="password-strength"></div>
+
+        <label for="accountType"><i class="fas fa-credit-card"></i> Account Type:</label>
+        <select id="accountType" required>
+            <option value="Checking">Checking</option>
+            <option value="Savings">Savings</option>
+        </select>
+
+        <label for="balance"><i class="fas fa-dollar-sign"></i> Starting Balance:</label>
+        <input type="number" id="balance" value="1000" min="0" required>
+
+        <button type="submit"><i class="fas fa-check"></i> Signup</button>
+    </form>
+    <p>Already have an account? <a href="login.html"><i class="fas fa-sign-in-alt"></i> Login here</a>.</p>
+</section>
+<script>
+document.getElementById('password').addEventListener('input', function() {
+    const password = this.value;
+    const strengthDiv = document.getElementById('password-strength');
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[a-z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+    const colors = ['#dc3545', '#ffc107', '#fd7e14', '#20c997', '#28a745'];
+    const texts = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
+    strengthDiv.textContent = texts[strength - 1] || '';
+    strengthDiv.style.color = colors[strength - 1] || '#dc3545';
+});
+
+document.getElementById('signupForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const name = document.getElementById('name').value.trim();
+    const username = document.getElementById('username').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value.trim();
+
+    if (!name || !username || !email || !password) {
+        alert('Please fill in all fields.');
+        return;
+    }
+
+    if (password.length < 8) {
+        alert('Password must be at least 8 characters long.');
+        return;
+    }
+
+    const accountNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+    const accountType = document.getElementById('accountType').value;
+    const balance = parseFloat(document.getElementById('balance').value) || 0;
+    const user = { name, username, email, password, accountNumber, accountType, balance };
+    localStorage.setItem('user', JSON.stringify({ name, accountNumber, accountType, balance }));
+    localStorage.setItem('registeredUser', JSON.stringify(user));
+    localStorage.setItem('balance', balance);
+    window.location.href = 'dashboad.html';
+});
+</script>
+</body>
+</html>
