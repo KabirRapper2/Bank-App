@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Expense Tracker & Calculator</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .panel {
+            background: #2d3436;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            color: white;
+        }
+        .panel-title {
+            color: #00ff7f;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .balance-display {
+            background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            text-align: center;
+            box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        .balance-amount {
+            color: #00ff7f;
+            font-size: 32px;
+            font-weight: bold;
+        }
+        .balance-amount.warning {
+            color: #ff7675;
+        }
+        .expense-item {
+            background: #636e72;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .expense-item:hover {
+            background: #74b9ff;
+        }
+        .calculator-display {
+            background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: right;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        .calc-current-operand {
+            color: #00ff7f;
+            font-size: 32px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="py-5">
+<div class="container-fluid">
+    <div class="row g-4 justify-content-center">
+        <!-- EXPENSE TRACKER PANEL -->
+        <div class="col-lg-5">
+            <div class="panel">
+                <div class="panel-title">💰 Expense Tracker</div>
+                
+                <div class="balance-display">
+                    <small class="text-muted d-block mb-2">Current Balance</small>
+                    <div class="balance-amount" id="balanceAmount">0.00</div>
+                </div>
+
+                <div class="input-group mb-3">
+                    <input type="number" class="form-control" id="initialBalanceInput" placeholder="Enter initial balance" step="0.01">
+                    <button class="btn btn-success" onclick="app.setInitialBalance()">Set</button>
+                </div>
+
+                <small class="d-block mb-2 text-muted">Quick Expenses</small>
+                <div class="mb-3" id="expenseItems"></div>
+
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="expenseName" placeholder="Item name">
+                    <input type="number" class="form-control" id="expenseAmount" placeholder="Amount" step="0.01">
+                    <button class="btn btn-danger" onclick="app.addCustomExpense()">Add</button>
+                </div>
+
+                <small class="d-block mb-2 text-muted">Transaction History</small>
+                <div class="bg-dark p-2 rounded" style="max-height: 250px; overflow-y: auto;" id="transactionHistory"></div>
+            </div>
+        </div>
+
+        <!-- CALCULATOR PANEL -->
+        <div class="col-lg-5">
+            <div class="panel">
+                <div class="panel-title">🧮 Calculator</div>
+                
+                <div class="calculator-display">
+                    <div class="text-muted" id="calcPreviousOperand"></div>
+                    <div class="calc-current-operand" id="calcCurrentOperand">0</div>
+                </div>
+                <div class="row g-2">
+                    <div class="col-3"><button class="btn btn-warning w-100" onclick="calculator.clear()">C</button></div>
+                    <div class="col-3"><button class="btn btn-warning w-100" onclick="calculator.delete()">DEL</button></div>
+                    <div class="col-3"><button class="btn btn-danger w-100" onclick="calculator.chooseOperation('÷')">÷</button></div>
+                    <div class="col-3"><button class="btn btn-secondary w-100" onclick="calculator.addNumber('7')">7</button></div>
+                    
+                    <div class="col-3"><button class="btn btn-secondary w-100" onclick="calculator.addNumber('8')">8</button></div>
+                    <div class="col-3"><button class="btn btn-secondary w-100" onclick="calculator.addNumber('9')">9</button></div>
+                    <div class="col-3"><button class="btn btn-danger w-100" onclick="calculator.chooseOperation('×')">×</button></div>
+                    <div class="col-3"><button class="btn btn-secondary w-100" onclick="calculator.addNumber('4')">4</button></div>
+                    
+                    <div class="col-3"><button class="btn btn-secondary w-100" onclick="calculator.addNumber('5')">5</button></div>
+                    <div class="col-3"><button class="btn btn-secondary w-100" onclick="calculator.addNumber('6')">6</button></div>
+                    <div class="col-3"><button class="btn btn-danger w-100" onclick="calculator.chooseOperation('-')">-</button></div>
+                    <div class="col-3"><button class="btn btn-secondary w-100" onclick="calculator.addNumber('1')">1</button></div>
+                    
+                    <div class="col-3"><button class="btn btn-secondary w-100" onclick="calculator.addNumber('2')">2</button></div>
+                    <div class="col-3"><button class="btn btn-secondary w-100" onclick="calculator.addNumber('3')">3</button></div>
+                    <div class="col-3"><button class="btn btn-danger w-100" onclick="calculator.chooseOperation('+')">+</button></div>
+                    <div class="col-6"><button class="btn btn-secondary w-100" onclick="calculator.addNumber('0')">0</button></div>
+                    
+                    <div class="col-3"><button class="btn btn-secondary w-100" onclick="calculator.addNumber('.')">.</button></div>
+                    <div class="col-3"><button class="btn btn-success w-100" onclick="calculator.compute()">=</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <script>
+        // CALCULATOR CLASS
+        class Calculator {
+            constructor(previousOperandElement, currentOperandElement) {
+                this.previousOperandElement = previousOperandElement;
+                this.currentOperandElement = currentOperandElement;
+                this.clear();
+            }
+
+            clear() {
+                this.currentOperand = '';
+                this.previousOperand = '';
+                this.operation = undefined;
+                this.updateDisplay();
+            }
+
+            delete() {
+                this.currentOperand = this.currentOperand.toString().slice(0, -1);
+                this.updateDisplay();
+            }
+
+            addNumber(number) {
+                if (number === '.' && this.currentOperand.includes('.')) return;
+                this.currentOperand = this.currentOperand.toString() + number.toString();
+                this.updateDisplay();
+            }
+
+            chooseOperation(operation) {
+                if (this.currentOperand === '') return;
+                if (this.previousOperand !== '') {
+                    this.compute();
+                }
+                this.operation = operation;
+                this.previousOperand = this.currentOperand;
+                this.currentOperand = '';
+                this.updateDisplay();
+            }
+
+            compute() {
+                let computation;
+                const prev = parseFloat(this.previousOperand);
+                const current = parseFloat(this.currentOperand);
+                if (isNaN(prev) || isNaN(current)) return;
+
+                switch (this.operation) {
+                    case '+':
+                        computation = prev + current;
+                        break;
+                    case '-':
+                        computation = prev - current;
+                        break;
+                    case '×':
+                        computation = prev * current;
+                        break;
+                    case '÷':
+                        computation = prev / current;
+                        break;
+                    default:
+                        return;
+                }
+                this.currentOperand = computation;
+                this.operation = undefined;
+                this.previousOperand = '';
+                this.updateDisplay();
+            }
+
+            updateDisplay() {
+                this.currentOperandElement.innerText = this.currentOperand || '0';
+                if (this.operation != null) {
+                    this.previousOperandElement.innerText = `${this.previousOperand} ${this.operation}`;
+                } else {
+                    this.previousOperandElement.innerText = '';
+                }
+            }
+        }
+
+        // EXPENSE TRACKER CLASS
+        class ExpenseTracker {
+            constructor() {
+                this.balance = 0;
+                this.transactions = [];
+                this.quickExpenses = [
+                    { name: 'Toilet Paper', amount: 15 },
+                    { name: 'Donut', amount: 10 },
+                    { name: 'Coffee', amount: 5 }
+                ];
+                this.init();
+            }
+
+            init() {
+                this.renderQuickExpenses();
+                this.updateDisplay();
+                localStorage.setItem('expenses_balance', this.balance);
+                localStorage.setItem('expenses_transactions', JSON.stringify(this.transactions));
+            }
+
+            setInitialBalance() {
+                const input = document.getElementById('initialBalanceInput');
+                const amount = parseFloat(input.value);
+                if (isNaN(amount) || amount < 0) {
+                    alert('Please enter a valid amount');
+                    return;
+                }
+                this.balance = amount;
+                input.value = '';
+                this.updateDisplay();
+                this.saveToLocalStorage();
+            }
+
+            addCustomExpense() {
+                const nameInput = document.getElementById('expenseName');
+                const amountInput = document.getElementById('expenseAmount');
+                const name = nameInput.value.trim();
+                const amount = parseFloat(amountInput.value);
+
+                if (!name || isNaN(amount) || amount <= 0) {
+                    alert('Please enter a valid item name and amount');
+                    return;
+                }
+
+                this.deductExpense(name, amount);
+                nameInput.value = '';
+                amountInput.value = '';
+            }
+
+            deductExpense(name, amount) {
+                this.balance -= amount;
+                this.transactions.push({
+                    name: name,
+                    amount: amount,
+                    date: new Date().toLocaleTimeString()
+                });
+                this.updateDisplay();
+                this.saveToLocalStorage();
+            }
+
+            removeTransaction(index) {
+                const transaction = this.transactions[index];
+                this.balance += transaction.amount;
+                this.transactions.splice(index, 1);
+                this.updateDisplay();
+                this.saveToLocalStorage();
+            }
+
+            renderQuickExpenses() {
+                const container = document.getElementById('expenseItems');
+                container.innerHTML = '';
+                this.quickExpenses.forEach((expense) => {
+                    const div = document.createElement('div');
+                    div.className = 'expense-item';
+                    div.onclick = () => this.deductExpense(expense.name, expense.amount);
+                    div.innerHTML = `
+                        <span class="expense-item-name">${expense.name}</span>
+                        <span class="expense-item-amount">-$${expense.amount.toFixed(2)}</span>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+
+            updateDisplay() {
+                const balanceEl = document.getElementById('balanceAmount');
+                balanceEl.textContent = `$${this.balance.toFixed(2)}`;
+                balanceEl.classList.toggle('warning', this.balance < 0);
+
+                const historyEl = document.getElementById('transactionHistory');
+                historyEl.innerHTML = '';
+                [...this.transactions].reverse().forEach((transaction, index) => {
+                    const reverseIndex = this.transactions.length - 1 - index;
+                    const div = document.createElement('div');
+                    div.className = 'transaction-item';
+                    div.innerHTML = `
+                        <span class="name">${transaction.name}</span>
+                        <span class="amount">-$${transaction.amount.toFixed(2)}</span>
+                        <button class="remove-btn" onclick="app.removeTransaction(${reverseIndex})">Undo</button>
+                    `;
+                    historyEl.appendChild(div);
+                });
+            }
+
+            saveToLocalStorage() {
+                localStorage.setItem('expenses_balance', this.balance);
+                localStorage.setItem('expenses_transactions', JSON.stringify(this.transactions));
+            }
+        }
+
+        // Initialize
+        const calculator = new Calculator(
+            document.getElementById('calcPreviousOperand'),
+            document.getElementById('calcCurrentOperand')
+        );
+
+        const app = new ExpenseTracker();
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

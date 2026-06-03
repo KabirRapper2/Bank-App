@@ -3,26 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="CSS/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <title>Fund Transfer - John F Kennedy Bank</title>
 </head>
-<body>
-<header>
-    <h1>John F Kennedy Bank</h1>
-    <h2>Fund Transfer</h2>
-    <a href="dashboad.html">Back to Dashboard</a>
+<body class="bg-light">
+<header class="bg-primary text-white py-4 mb-5">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-university"></i> John F Kennedy Bank</h1>
+            <h2 class="lead">Fund Transfer</h2>
+        </div>
+        <a href="dashboad.html" class="btn btn-light">Back to Dashboard</a>
+    </div>
 </header>
-<section>
-    <h3>Transfer Funds</h3>
-    <form id="transferForm">
-        <label for="amount">Amount:</label>
-        <input type="number" id="amount" step="0.01" required><br><br>
-        <label for="recipient">Recipient Account:</label>
-        <input type="text" id="recipient" required><br><br>
-        <label for="description">Description:</label>
-        <input type="text" id="description"><br><br>
-        <button type="submit">Transfer</button>
-    </form>
+<section class="container" style="max-width: 500px; margin-bottom: 50px;">
+    <div class="card shadow">
+        <div class="card-body">
+            <h3 class="card-title mb-4"><i class="fas fa-exchange-alt"></i> Transfer Funds</h3>
+            <form id="transferForm">
+                <div class="mb-3">
+                    <label for="amount" class="form-label">Amount:</label>
+                    <input type="number" class="form-control" id="amount" step="0.01" required>
+                </div>
+                <div class="mb-3">
+                    <label for="recipient" class="form-label">Recipient Account:</label>
+                    <input type="text" class="form-control" id="recipient" required>
+                </div>
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description:</label>
+                    <input type="text" class="form-control" id="description">
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Transfer</button>
+            </form>
+        </div>
+    </div>
 </section>
 <script src="JS/script.js"></script>
 <script>
@@ -46,5 +61,6 @@ document.getElementById('transferForm').addEventListener('submit', function(e) {
     }
 });
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
