@@ -1,265 +1,595 @@
-// JavaScript for Bank App Dashboard - Enhanced for the Best Bank App Ever!
+// ============================================
+// PREMIUM BANK APP - ENHANCED JAVASCRIPT
+// ============================================
 
-// Initialize app data
-let balance = parseFloat(localStorage.getItem('balance')) || 5432.10;
-let transactions = JSON.parse(localStorage.getItem('transactions')) || [
-    { description: 'Grocery Store Purchase', amount: -45.67, date: 'April 5, 2026', category: 'Food' },
-    { description: 'Salary Deposit', amount: 3200.00, date: 'April 1, 2026', category: 'Income' },
-    { description: 'Online Payment', amount: -120.00, date: 'March 28, 2026', category: 'Bills' },
-    { description: 'ATM Withdrawal', amount: -50.00, date: 'March 25, 2026', category: 'Cash' },
-    { description: 'Utility Bill Payment', amount: -89.45, date: 'March 20, 2026', category: 'Bills' }
-];
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
 
-let user = JSON.parse(localStorage.getItem('user')) || null;
-let registeredUser = JSON.parse(localStorage.getItem('registeredUser')) || null;
-let monthlyBudget = parseFloat(localStorage.getItem('monthlyBudget')) || 5000;
-let darkMode = localStorage.getItem('darkMode') === 'true';
-
-if (user && user.balance !== undefined) {
-    balance = parseFloat(user.balance);
+/**
+ * Format currency values
+ */
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(amount);
 }
 
-// Check login on dashboard
-if (window.location.pathname.includes('dashboad.html') && !user) {
-    window.location.href = 'login.html';
+/**
+ * Format dates
+ */
+function formatDate(date) {
+    if (typeof date === 'string') {
+        date = new Date(date);
+    }
+    return new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    }).format(date);
 }
 
-// Update UI on load
+/**
+ * Show notification
+ */
+function showNotification(message, type = 'info', duration = 3000) {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i> ${message}`;
+    
+    const container = document.querySelector('body');
+    container.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideInUp 0.4s ease-out reverse';
+        setTimeout(() => notification.remove(), 400);
+    }, duration);
+}
+
+/**
+ * Debounce function for search
+ */
+function debounce(func, delay) {
+    let timeoutId;
+    return function(...args) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => func.apply(this, args), delay);
+    };
+}
+
+/**
+ * Validate email
+ */
+function validateEmail(email) {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+}
+
+/**
+ * Validate amount
+ */
+function validateAmount(amount) {
+    const num = parseFloat(amount);
+    return !isNaN(num) && num > 0;
+}
+
+/**
+ * Animate element
+ */
+function animateValue(element, start, end, duration) {
+    const range = end - start;
+    const increment = range / (duration / 16);
+    let current = start;
+
+    const timer = setInterval(() => {
+        current += increment;
+        if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+            element.textContent = formatCurrency(end);
+            clearInterval(timer);
+        } else {
+            element.textContent = formatCurrency(current);
+        }
+    }, 16);
+}
+
+// ============================================
+// DATA MANAGEMENT
+// ============================================
+
+class StorageManager {
+    static get(key, defaultValue = null) {
+        try {
+            const item = localStorage.getItem(key);
+            return item ? JSON.parse(item) : defaultValue;
+        } catch (e) {
+            console.error('Error reading from storage:', e);
+            return defaultValue;
+        }
+    }
+
+    static set(key, value) {
+        try {
+            localStorage.setItem(key, JSON.stringify(value));
+            return true;
+        } catch (e) {
+            console.error('Error writing to storage:', e);
+            showNotification('Storage error. Some data may not be saved.', 'error');
+            return false;
+        }
+    }
+
+    static remove(key) {
+        try {
+            localStorage.removeItem(key);
+            return true;
+        } catch (e) {
+            console.error('Error removing from storage:', e);
+            return false;
+        }
+    }
+
+    static clear() {
+        try {
+            localStorage.clear();
+            return true;
+        } catch (e) {
+            console.error('Error clearing storage:', e);
+            return false;
+        }
+    }
+}
+
+// ============================================
+// GLOBAL APPLICATION STATE
+// ============================================
+
+const AppState = {
+    balance: StorageManager.get('balance', 5432.10),
+    transactions: StorageManager.get('transactions', [
+        { description: 'Grocery Store Purchase', amount: -45.67, date: new Date(2026, 3, 5).toLocaleDateString(), category: 'Food' },
+        { description: 'Salary Deposit', amount: 3200.00, date: new Date(2026, 3, 1).toLocaleDateString(), category: 'Income' },
+        { description: 'Online Payment', amount: -120.00, date: new Date(2026, 2, 28).toLocaleDateString(), category: 'Bills' },
+        { description: 'ATM Withdrawal', amount: -50.00, date: new Date(2026, 2, 25).toLocaleDateString(), category: 'Cash' },
+        { description: 'Utility Bill Payment', amount: -89.45, date: new Date(2026, 2, 20).toLocaleDateString(), category: 'Bills' }
+    ]),
+    user: StorageManager.get('user', null),
+    monthlyBudget: StorageManager.get('monthlyBudget', 5000),
+    darkMode: StorageManager.get('darkMode', false),
+    transactionHistory: StorageManager.get('transactionHistory', [])
+};
+
+// ============================================
+// INITIALIZATION
+// ============================================
+
 document.addEventListener('DOMContentLoaded', function() {
-    if (darkMode) {
+    initializeApp();
+    setupEventListeners();
+});
+
+function initializeApp() {
+    // Apply dark mode if enabled
+    if (AppState.darkMode) {
         document.body.classList.add('dark-mode');
     }
+
+    // Check authentication
+    if (window.location.pathname.includes('dashboad.html') && !AppState.user) {
+        showNotification('Please log in to access the dashboard', 'warning');
+        setTimeout(() => window.location.href = 'login.html', 1500);
+        return;
+    }
+
+    // Update UI elements
     updateBalanceDisplay();
     updateTransactionsDisplay();
     updateUserInfo();
     updateBudgetDisplay();
     renderChart();
-});
+}
 
-// Refresh data when page becomes visible (user returns from other pages)
-window.addEventListener('focus', function() {
+function setupEventListeners() {
+    // Search with debounce
+    const searchInput = document.getElementById('transaction-search');
+    if (searchInput) {
+        searchInput.addEventListener('keyup', debounce(filterTransactions, 300));
+    }
+
+    // Window focus to refresh data
+    window.addEventListener('focus', refreshAppData);
+}
+
+function refreshAppData() {
+    updateBalanceDisplay();
+    updateTransactionsDisplay();
+    updateBudgetDisplay();
+}
+
+// ============================================
+// BALANCE MANAGEMENT
+// ============================================
+
+function updateBalanceDisplay() {
+    const displayElements = [
+        document.querySelector('.account-summary .detail:nth-child(3) p'),
+        document.getElementById('displayBalance')
+    ];
+
+    displayElements.forEach(element => {
+        if (element) {
+            const currentBalance = parseFloat(AppState.balance);
+            element.textContent = formatCurrency(currentBalance);
+            element.style.color = currentBalance < 0 ? '#dc3545' : '#28a745';
+            element.classList.add('animate-pulse');
+            setTimeout(() => element.classList.remove('animate-pulse'), 600);
+        }
+    });
+
+    StorageManager.set('balance', AppState.balance);
+}
+
+function addBalance() {
+    const amount = parseFloat(prompt('Enter amount to add to your account ($0 - $10,000):'));
+    
+    if (!amount) return;
+    
+    if (!validateAmount(amount)) {
+        showNotification('Please enter a valid positive amount', 'error');
+        return;
+    }
+    
+    if (amount > 10000) {
+        showNotification('Maximum deposit amount is $10,000. Contact support for larger deposits.', 'warning');
+        return;
+    }
+
+    addTransaction(`Balance Deposit`, amount, new Date().toLocaleDateString(), 'Deposit');
+    showNotification(`Successfully added ${formatCurrency(amount)} to your account!`, 'success');
+}
+
+// ============================================
+// TRANSACTION MANAGEMENT
+// ============================================
+
+function addTransaction(description, amount, date = new Date().toLocaleDateString(), category = 'Other') {
+    if (!description || !validateAmount(Math.abs(amount))) {
+        showNotification('Invalid transaction data', 'error');
+        return;
+    }
+
+    const transaction = {
+        description,
+        amount: parseFloat(amount),
+        date,
+        category,
+        id: Date.now(),
+        timestamp: new Date().toISOString()
+    };
+
+    AppState.transactions.unshift(transaction);
+    AppState.balance += parseFloat(amount);
+    
+    // Keep transaction history for undo
+    AppState.transactionHistory.push({
+        action: 'add',
+        transaction: transaction,
+        previousBalance: AppState.balance - parseFloat(amount)
+    });
+
+    StorageManager.set('transactions', AppState.transactions);
+    StorageManager.set('balance', AppState.balance);
+    StorageManager.set('transactionHistory', AppState.transactionHistory);
+
     updateBalanceDisplay();
     updateTransactionsDisplay();
     updateBudgetDisplay();
     renderChart();
-});
-
-// Toggle dark mode
-function toggleDarkMode() {
-    darkMode = !darkMode;
-    document.body.classList.toggle('dark-mode');
-    localStorage.setItem('darkMode', darkMode);
 }
 
-// Update balance display
-function updateBalanceDisplay() {
-    const balanceElement = document.querySelector('.account-summary .detail:nth-child(3) p');
-    if (balanceElement) {
-        balanceElement.textContent = '$' + balance.toFixed(2);
-        balanceElement.style.color = balance < 0 ? '#dc3545' : '#28a745';
-    }
-    localStorage.setItem('balance', balance);
-}
-
-// Update transactions display
 function updateTransactionsDisplay(filter = '') {
     const ul = document.getElementById('transaction-list');
     if (!ul) return;
+
     ul.innerHTML = '';
-    const filteredTransactions = transactions.filter(t => 
+    
+    const filteredTransactions = AppState.transactions.filter(t => 
         t.description.toLowerCase().includes(filter.toLowerCase()) ||
         t.category.toLowerCase().includes(filter.toLowerCase())
     );
-    filteredTransactions.slice(0, 10).forEach(transaction => {
+
+    if (filteredTransactions.length === 0) {
+        ul.innerHTML = '<li style="text-align:center; border: none;">No transactions found</li>';
+        return;
+    }
+
+    filteredTransactions.slice(0, 15).forEach((transaction, index) => {
         const li = document.createElement('li');
+        const isIncome = transaction.amount > 0;
+        
         li.innerHTML = `
-            <span>${transaction.description} (${transaction.category})</span>
-            <span style="color: ${transaction.amount < 0 ? '#dc3545' : '#28a745'}">$${transaction.amount.toFixed(2)}</span>
-            <small>${transaction.date}</small>
+            <div style="flex: 1;">
+                <strong>${transaction.description}</strong>
+                <br>
+                <small class="text-muted">${transaction.category} • ${transaction.date}</small>
+            </div>
+            <div style="text-align: right;">
+                <span class="${isIncome ? 'text-success' : 'text-danger'}" style="font-weight: bold; font-size: 1.1em;">
+                    ${isIncome ? '+' : ''}${formatCurrency(transaction.amount)}
+                </span>
+            </div>
         `;
+        
         ul.appendChild(li);
     });
-    localStorage.setItem('transactions', JSON.stringify(transactions));
-    updateBudgetDisplay();
+
+    // Show total count
+    if (filteredTransactions.length > 15) {
+        const moreInfo = document.createElement('li');
+        moreInfo.style.textAlign = 'center';
+        moreInfo.style.border = 'none';
+        moreInfo.innerHTML = `<small class="text-muted">+${filteredTransactions.length - 15} more transactions</small>`;
+        ul.appendChild(moreInfo);
+    }
 }
 
-// Filter transactions
 function filterTransactions() {
-    const searchTerm = document.getElementById('transaction-search').value;
+    const searchTerm = document.getElementById('transaction-search')?.value || '';
     updateTransactionsDisplay(searchTerm);
 }
 
-// Update user info
+// ============================================
+// USER INFORMATION
+// ============================================
+
 function updateUserInfo() {
-    if (!user) return;
-    document.querySelector('.account-summary .detail:nth-child(1) p').textContent = user.accountNumber;
-    document.querySelector('.account-summary .detail:nth-child(2) p').textContent = user.name;
-    document.querySelector('.account-summary .detail:nth-child(4) p').textContent = user.accountType || 'Checking';
+    if (!AppState.user) return;
+
+    const accountNumberEl = document.querySelector('.account-summary .detail:nth-child(1) p') || 
+                            document.getElementById('displayAccountNumber');
+    const accountHolderEl = document.querySelector('.account-summary .detail:nth-child(2) p') || 
+                            document.getElementById('displayAccountHolder');
+    const accountTypeEl = document.querySelector('.account-summary .detail:nth-child(4) p') || 
+                          document.getElementById('displayAccountType');
+
+    if (accountNumberEl) accountNumberEl.textContent = AppState.user.accountNumber;
+    if (accountHolderEl) accountHolderEl.textContent = AppState.user.name;
+    if (accountTypeEl) accountTypeEl.textContent = AppState.user.accountType || 'Checking';
 }
 
-// Set budget
+// ============================================
+// BUDGET MANAGEMENT
+// ============================================
+
 function setBudget() {
     const budgetInput = document.getElementById('monthly-budget');
-    monthlyBudget = parseFloat(budgetInput.value) || 5000;
-    localStorage.setItem('monthlyBudget', monthlyBudget);
+    const amount = parseFloat(budgetInput?.value);
+
+    if (!validateAmount(amount)) {
+        showNotification('Please enter a valid budget amount', 'error');
+        return;
+    }
+
+    AppState.monthlyBudget = amount;
+    StorageManager.set('monthlyBudget', AppState.monthlyBudget);
     updateBudgetDisplay();
+    showNotification(`Budget set to ${formatCurrency(amount)}`, 'success');
 }
 
-// Update budget display
 function updateBudgetDisplay() {
-    const spent = transactions.filter(t => t.amount < 0 && new Date(t.date) > new Date(new Date().getFullYear(), new Date().getMonth(), 1)).reduce((sum, t) => sum + Math.abs(t.amount), 0);
-    document.getElementById('monthly-spent').textContent = spent.toFixed(2);
-    document.getElementById('monthly-budget-display').textContent = monthlyBudget.toFixed(2);
-    const progressFill = document.getElementById('progress-fill');
-    const percentage = Math.min((spent / monthlyBudget) * 100, 100);
-    progressFill.style.width = percentage + '%';
-    progressFill.style.backgroundColor = percentage > 90 ? '#dc3545' : '#28a745';
-}
+    const currentMonth = new Date();
+    const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+    
+    const spent = AppState.transactions
+        .filter(t => t.amount < 0 && new Date(t.date) >= monthStart)
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-// Add transaction
-function addTransaction(description, amount, date = new Date().toLocaleDateString(), category = 'Other') {
-    transactions.unshift({ description, amount, date, category });
-    balance += amount;
-    updateBalanceDisplay();
-    updateTransactionsDisplay();
-    renderChart();
-}
+    const elements = {
+        spent: document.getElementById('monthly-spent'),
+        budget: document.getElementById('monthly-budget-display'),
+        fill: document.getElementById('progress-fill')
+    };
 
-// Export transactions to CSV
-function exportTransactions() {
-    const csvContent = 'data:text/csv;charset=utf-8,' + 
-        'Description,Amount,Date,Category\n' + 
-        transactions.map(t => `${t.description},${t.amount},${t.date},${t.category}`).join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', 'transactions.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
+    if (elements.spent) {
+        elements.spent.textContent = spent.toFixed(2);
+    }
 
-// Update user info
-function updateUserInfo() {
-    document.querySelector('.account-summary .detail:nth-child(1) p').textContent = user.accountNumber;
-    document.querySelector('.account-summary .detail:nth-child(2) p').textContent = user.name;
-    document.querySelector('.account-summary .detail:nth-child(4) p').textContent = user.accountType || 'Checking';
-}
+    if (elements.budget) {
+        elements.budget.textContent = AppState.monthlyBudget.toFixed(2);
+    }
 
-// Make a kid account
-function Make_a_kid_account() {
-    const kidName = prompt('Enter kid\'s name:');
-    if (kidName) {
-        addTransaction(`Kid Account Created for ${kidName}`, -10); // Small fee
-        alert(`Kid account created for ${kidName}!`);
+    if (elements.fill) {
+        const percentage = Math.min((spent / AppState.monthlyBudget) * 100, 100);
+        elements.fill.style.width = percentage + '%';
+        elements.fill.style.backgroundColor = percentage > 90 ? '#dc3545' : percentage > 75 ? '#ffc107' : '#28a745';
     }
 }
 
-// Transfer funds
-function transferFunds() {
-    const amount = parseFloat(prompt('Enter transfer amount:'));
-    const recipient = prompt('Enter recipient account:');
-    if (amount && recipient && amount <= balance) {
-        addTransaction(`Transfer to ${recipient}`, -amount);
-        alert(`Transferred $${amount} to ${recipient}`);
-    } else {
-        alert('Invalid transfer amount or insufficient funds');
-    }
-}
+// ============================================
+// CHART RENDERING
+// ============================================
 
-// Pay bills
-function payBills() {
-    const billType = prompt('Enter bill type (e.g., Electricity, Water):');
-    const amount = parseFloat(prompt('Enter bill amount:'));
-    if (billType && amount && amount <= balance) {
-        addTransaction(`${billType} Bill Payment`, -amount);
-        alert(`Paid $${amount} for ${billType}`);
-    } else {
-        alert('Invalid bill payment');
-    }
-}
+let chartInstance = null;
 
-// Add balance to account
-function addBalance() {
-    const amount = parseFloat(prompt('Enter amount to add to your account:'));
-    if (amount && amount > 0 && amount <= 10000) { // Max $10,000 per deposit for security
-        addTransaction(`Balance Deposit`, amount, new Date().toLocaleDateString(), 'Deposit');
-        alert(`Successfully added $${amount.toFixed(2)} to your account!`);
-    } else if (amount > 10000) {
-        alert('Maximum deposit amount is $10,000. Please contact support for larger deposits.');
-    } else {
-        alert('Please enter a valid positive amount.');
-    }
-}
-
-// View statements (placeholder)
-function viewStatements() {
-    alert('Statement feature coming soon. Current transactions:\n' + transactions.map(t => `${t.description}: $${t.amount}`).join('\n'));
-}
-
-// Apply for loan
-function applyForLoan() {
-    const amount = parseFloat(prompt('Enter loan amount:'));
-    if (amount) {
-        addTransaction(`Loan Application for $${amount}`, 0); // No immediate change
-        alert(`Loan application submitted for $${amount}`);
-    }
-}
-
-// Contact support
-function contactSupport() {
-    const message = prompt('Enter your message:');
-    if (message) {
-        alert('Support ticket created. We\'ll get back to you soon.');
-    }
-}
-
-// Render chart
 function renderChart() {
     const ctx = document.getElementById('spendingChart');
     if (!ctx) return;
 
-    const labels = transactions.slice(0, 7).map(t => t.date).reverse();
-    const data = transactions.slice(0, 7).map(t => Math.abs(t.amount)).reverse();
+    if (chartInstance) {
+        chartInstance.destroy();
+    }
 
-    new Chart(ctx, {
-        type: 'line',
+    const labels = AppState.transactions.slice(0, 12).map(t => formatDate(t.date)).reverse();
+    const incomeData = AppState.transactions.slice(0, 12).map(t => t.amount > 0 ? t.amount : 0).reverse();
+    const expenseData = AppState.transactions.slice(0, 12).map(t => t.amount < 0 ? Math.abs(t.amount) : 0).reverse();
+
+    chartInstance = new Chart(ctx, {
+        type: 'bar',
         data: {
             labels: labels,
-            datasets: [{
-                label: 'Transaction Amounts',
-                data: data,
-                borderColor: '#004080',
-                backgroundColor: 'rgba(0, 64, 128, 0.1)',
-                tension: 0.1
-            }]
+            datasets: [
+                {
+                    label: 'Income',
+                    data: incomeData,
+                    backgroundColor: 'rgba(40, 167, 69, 0.7)',
+                    borderColor: '#28a745',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Expenses',
+                    data: expenseData,
+                    backgroundColor: 'rgba(220, 53, 69, 0.7)',
+                    borderColor: '#dc3545',
+                    borderWidth: 1
+                }
+            ]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: true,
             plugins: {
                 title: {
                     display: true,
-                    text: 'Recent Transaction Amounts'
+                    text: 'Income vs Expenses (Last 12 Transactions)',
+                    font: { size: 14, weight: 'bold' }
+                },
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toFixed(0);
+                        }
+                    }
                 }
             }
         }
     });
 }
 
-// Simulate login
-function login() {
-    const username = prompt('Enter username:');
-    const password = prompt('Enter password:');
-    if (username && password) {
-        user = { name: username, accountNumber: '1234567890' };
-        localStorage.setItem('user', JSON.stringify(user));
-        updateUserInfo();
-        alert('Logged in successfully!');
+// ============================================
+// TRANSACTION FUNCTIONS
+// ============================================
+
+function transferFunds() {
+    const amount = parseFloat(prompt('Enter transfer amount:'));
+    const recipient = prompt('Enter recipient account number:');
+
+    if (!amount || !recipient) return;
+
+    if (!validateAmount(amount)) {
+        showNotification('Invalid transfer amount', 'error');
+        return;
+    }
+
+    if (amount > AppState.balance) {
+        showNotification('Insufficient funds for this transfer', 'error');
+        return;
+    }
+
+    addTransaction(`Transfer to ${recipient}`, -amount, new Date().toLocaleDateString(), 'Transfer');
+    showNotification(`Successfully transferred ${formatCurrency(amount)} to account ${recipient}`, 'success');
+}
+
+function payBills() {
+    const billType = prompt('Enter bill type (Electricity, Water, Gas, Internet, Phone, Other):');
+    const amount = parseFloat(prompt('Enter bill amount:'));
+
+    if (!billType || !amount) return;
+
+    if (!validateAmount(amount)) {
+        showNotification('Invalid bill amount', 'error');
+        return;
+    }
+
+    if (amount > AppState.balance) {
+        showNotification('Insufficient funds to pay this bill', 'error');
+        return;
+    }
+
+    addTransaction(`${billType} Bill Payment`, -amount, new Date().toLocaleDateString(), 'Bills');
+    showNotification(`Successfully paid ${formatCurrency(amount)} for ${billType}`, 'success');
+}
+
+// ============================================
+// EXPORT FUNCTIONS
+// ============================================
+
+function exportTransactions() {
+    const csvContent = 'Description,Amount,Date,Category\n' +
+        AppState.transactions
+            .map(t => `"${t.description}",${t.amount},"${t.date}","${t.category}"`)
+            .join('\n');
+
+    const link = document.createElement('a');
+    link.href = 'data:text/csv;charset=utf-8,' + encodeURI(csvContent);
+    link.download = `transactions_${formatDate(new Date())}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    showNotification('Transactions exported successfully', 'success');
+}
+
+// ============================================
+// THEME MANAGEMENT
+// ============================================
+
+function toggleDarkMode() {
+    AppState.darkMode = !AppState.darkMode;
+    document.body.classList.toggle('dark-mode');
+    StorageManager.set('darkMode', AppState.darkMode);
+    showNotification(`Dark mode ${AppState.darkMode ? 'enabled' : 'disabled'}`, 'info');
+}
+
+// ============================================
+// MISCELLANEOUS FUNCTIONS
+// ============================================
+
+function Make_a_kid_account() {
+    const kidName = prompt('Enter kid\'s name:');
+    if (kidName) {
+        addTransaction(`Kid Account Created for ${kidName}`, -10, new Date().toLocaleDateString(), 'Fees');
+        showNotification(`Kid account created for ${kidName}!`, 'success');
     }
 }
 
-// Logout
+function applyForLoan() {
+    const amount = parseFloat(prompt('Enter loan amount ($1,000 - $50,000):'));
+    if (amount) {
+        if (amount < 1000 || amount > 50000) {
+            showNotification('Loan amount must be between $1,000 and $50,000', 'error');
+            return;
+        }
+        addTransaction(`Loan Application for ${formatCurrency(amount)}`, 0, new Date().toLocaleDateString(), 'Loan');
+        showNotification(`Loan application submitted for ${formatCurrency(amount)}. We'll review it within 2-3 business days.`, 'success');
+    }
+}
+
+function contactSupport() {
+    const message = prompt('Describe your issue:');
+    if (message) {
+        showNotification('Support ticket #' + Date.now() + ' created. We\'ll respond within 24 hours.', 'success');
+    }
+}
+
 function logout() {
-    localStorage.removeItem('user');
-    window.location.href = 'login.html';
+    StorageManager.remove('user');
+    showNotification('You have been logged out', 'info');
+    setTimeout(() => window.location.href = 'login.html', 1500);
+}
+
+function viewStatements() {
+    if (AppState.transactions.length === 0) {
+        showNotification('No transactions found', 'warning');
+        return;
+    }
+    showNotification(`Showing ${AppState.transactions.length} transactions`, 'info');
 }
