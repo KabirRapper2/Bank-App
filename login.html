@@ -38,28 +38,35 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value.trim();
-    const registeredUser = JSON.parse(localStorage.getItem('registeredUser')) || null;
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    const registeredUser = users.find(user => user.username === username) || null;
 
     if (!username || !password) {
         alert('Please enter valid credentials.');
         return;
     }
 
-    if (registeredUser && registeredUser.username === username && registeredUser.password === password) {
-        const user = {
-            name: registeredUser.name,
-            accountNumber: registeredUser.accountNumber,
-            balance: registeredUser.balance,
-            accountType: registeredUser.accountType
-        };
-        localStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem('balance', registeredUser.balance);
-        window.location.href = 'dashboad.html';
-    } else if (!registeredUser) {
+    if (!registeredUser) {
         alert('No registered user found. Please signup first.');
-    } else {
-        alert('Username or password is incorrect.');
+        return;
     }
+
+    if (registeredUser.password !== password) {
+        alert('Username or password is incorrect.');
+        return;
+    }
+
+    const user = {
+        name: registeredUser.name,
+        username: registeredUser.username,
+        email: registeredUser.email,
+        accountNumber: registeredUser.accountNumber,
+        balance: registeredUser.balance,
+        accountType: registeredUser.accountType
+    };
+    localStorage.setItem('user', JSON.stringify(user));
+    localStorage.setItem('balance', registeredUser.balance);
+    window.location.href = 'dashboad.html';
 });
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>

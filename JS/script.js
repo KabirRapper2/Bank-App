@@ -156,6 +156,7 @@ const AppState = {
         { description: 'Utility Bill Payment', amount: -89.45, date: new Date(2026, 2, 20).toLocaleDateString(), category: 'Bills' }
     ]),
     user: StorageManager.get('user', null),
+    users: StorageManager.get('users', []),
     monthlyBudget: StorageManager.get('monthlyBudget', 5000),
     darkMode: StorageManager.get('darkMode', false),
     transactionHistory: StorageManager.get('transactionHistory', [])

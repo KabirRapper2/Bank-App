@@ -90,8 +90,17 @@ document.getElementById('signupForm').addEventListener('submit', function(e) {
     const accountNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
     const accountType = document.getElementById('accountType').value;
     const balance = parseFloat(document.getElementById('balance').value) || 0;
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+
+    if (users.some(u => u.username === username)) {
+        alert('Username already exists. Please choose another username.');
+        return;
+    }
+
     const user = { name, username, email, password, accountNumber, accountType, balance };
-    localStorage.setItem('user', JSON.stringify({ name, accountNumber, accountType, balance }));
+    users.push(user);
+    localStorage.setItem('users', JSON.stringify(users));
+    localStorage.setItem('user', JSON.stringify({ name, username, email, accountNumber, accountType, balance }));
     localStorage.setItem('registeredUser', JSON.stringify(user));
     localStorage.setItem('balance', balance);
     window.location.href = 'dashboad.html';

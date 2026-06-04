@@ -29,19 +29,66 @@
     </div>
 </section>
 <script src="JS/script.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
 <script>
 function displayStatement() {
     const statementDiv = document.getElementById('statement');
-    statementDiv.innerHTML = '<h4>Account Holder: ' + user.name + '</h4><h4>Account Number: ' + user.accountNumber + '</h4><h4>Current Balance: $' + balance.toFixed(2) + '</h4><h4>Transactions:</h4><ul>';
-    transactions.forEach(transaction => {
-        statementDiv.innerHTML += `<li>${transaction.description}: $${transaction.amount.toFixed(2)} on ${transaction.date}</li>`;
-    });
-    statementDiv.innerHTML += '</ul>';
+    const user = AppState.user || { name: 'John Doe', accountNumber: '1234567890', accountType: 'Checking' };
+    const balance = parseFloat(AppState.balance || 0);
+    const transactions = AppState.transactions || [];
+
+    let html = `
+        <div class="mb-3">
+            <h4>Account Holder: ${user.name}</h4>
+            <h4>Account Number: ${user.accountNumber}</h4>
+            <h4>Account Type: ${user.accountType || 'Checking'}</h4>
+            <h4>Current Balance: ${formatCurrency(balance)}</h4>
+        </div>
+        <div>
+            <h5>Transactions:</h5>
+            <ul class="list-group" style="max-width: 720px;">
+    `;
+
+    if (transactions.length === 0) {
+        html += '<li class="list-group-item">No transactions available.</li>';
+    } else {
+        transactions.forEach(transaction => {
+            const amountText = transaction.amount >= 0 ? `+${formatCurrency(transaction.amount)}` : formatCurrency(transaction.amount);
+            html += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${transaction.description}</strong><br>
+                            <small class="text-muted">${transaction.category || 'Other'} • ${formatDate(transaction.date)}</small>
+                        </div>
+                        <span class="${transaction.amount >= 0 ? 'text-success' : 'text-danger'}">${amountText}</span>
+                    </li>`;
+        });
+    }
+
+    html += '</ul>';
+    statementDiv.innerHTML = html;
 }
 
 function downloadStatement() {
-    alert('PDF download feature coming soon. For now, print this page.');
-    window.print();
+    const statementDiv = document.getElementById('statement');
+    if (!statementDiv) {
+        alert('Statement content not found.');
+        return;
+    }
+
+    const opt = {
+        margin:       10,
+        filename:     'JFK-Statement.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, logging: false },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(statementDiv).save()
+        .then(() => showNotification('Statement downloaded as PDF.', 'success'))
+        .catch(error => {
+            console.error(error);
+            alert('Unable to download PDF. Please try again or use the browser print option.');
+        });
 }
 
 document.addEventListener('DOMContentLoaded', displayStatement);
